@@ -1,68 +1,46 @@
-const Web3 = require("web3");
-const address = require("./output.json");
-const  Holder = require("../constants/holder.json");
-require("dotenv").config();
-
-
+var Web3 = require('web3');
 const Provider = require('@truffle/hdwallet-provider');
-var SmartContractAddress = "your smart contract address";
-var SmartContractABI = contract_abi;
-var address = "account adress"
-var privatekey = "private key of the above account address";
-var rpcurl = "infura rpc url";
+const ABI = require("../constants/holder.json");
 
 
-async function main() {
-  // Configuring the connection to an Ethereum node
-  const network = process.env.ETHEREUM_NETWORK;
-  const web3 = new Web3(
-    new Web3.providers.HttpProvider(
-        process.env.PROVIDER
-    )
-  );
-  console.log(process.env.SIGNER_PRIVATE_KEY )
-  // Creating a signing account from a private key
-  const signer = await web3.eth.accounts.privateKeyToAccount(
-    process.env.SIGNER_PRIVATE_KEY
-  );
 
-  const holder =  new web3.eth.Contract(Holder, address.holder);
-console.log(holder.methods)
+var rpcurl = "https://polygon-mumbai.infura.io/v3/3f7108824f2446b19b1d4d3f51a89671";
+var senderaddress = "0xF32F7C03a4D530935F5332CA5DC4a971149dda2E";
+var receiveraddress = "0x043Fe51F898e3bf716963A2218b619DB1ea845D2";
+var contractAddress = "0xaf2bafAed7186B16Aa41184FDa392A246A6fBD85";
 
-//   web3.eth.accounts.wallet.add(signer);
+var senderprivatekey = 'd03584ecb7364b6db0c1a904f5f5ed46afc6113f4f038179121e8b7a905d5b67';
 
-//   // Estimatic the gas limit
-//   var limit = web3.eth.estimateGas({
-//     from: signer.address, 
-//     to: "0xAED01C776d98303eE080D25A21f0a42D94a86D9c",
-//     value: web3.utils.toWei("0.001")
-//     }).then(console.log);
-    
-//   // Creating the transaction object
-//   const tx = {
-//     from: signer.address,
-//     to: "0xAED01C776d98303eE080D25A21f0a42D94a86D9c",
-//     value: web3.utils.numberToHex(web3.utils.toWei('0.01', 'ether')),
-//     gas: web3.utils.toHex(limit),
-//     nonce: web3.eth.getTransactionCount(signer.address),
-//     maxPriorityFeePerGas: web3.utils.toHex(web3.utils.toWei('2', 'gwei')),
-//     chainId: 3,                  
-//     type: 0x2
-//   };
 
-//   signedTx = await web3.eth.accounts.signTransaction(tx, signer.privateKey)
-//   console.log("Raw transaction data: " + signedTx.rawTransaction)
+async function sendNFTRewards (winner,looser) {
 
-//   // Sending the transaction to the network
-//   const receipt = await web3.eth
-//     .sendSignedTransaction(signedTx.rawTransaction)
-//     .once("transactionHash", (txhash) => {
-//       console.log(`Mining transaction ...`);
-//       console.log(`https://${network}.etherscan.io/tx/${txhash}`);
-//     });
-//   // The transaction is now on chain!
-//   console.log(`Mined in block ${receipt.blockNumber}`);
+    console.log("in function");
+    var provider = new Provider(senderprivatekey, rpcurl);
+  var web3 = new Web3(provider);
+  const address = await web3.eth.getAccounts();
 
+    var contract = new web3.eth.Contract(ABI, contractAddress);
+  console.log("transaction initiated");
+  var transaction = await contract.methods.rewardDistributionNFt(winner, looser).send({ from: address[0] });
+  console.log(transaction);
+  return transaction;
 }
 
-main();
+async function sendTokenRewards (winner,looser) {
+
+  console.log("in function");
+  var provider = new Provider(senderprivatekey, rpcurl);
+var web3 = new Web3(provider);
+const address = await web3.eth.getAccounts();
+
+  var contract = new web3.eth.Contract(ABI, contractAddress);
+console.log("transaction initiated");
+var transaction = await contract.methods.rewardDistributionToken(winner, looser).send({ from: address[0] });
+console.log(transaction);
+return transaction;
+}
+
+// transaction may take a few min to execute since we are using ropsten so be patient
+
+module.exports.sendNFTRewards = sendNFTRewards;
+module.exports.sendTokenRewards = sendTokenRewards;

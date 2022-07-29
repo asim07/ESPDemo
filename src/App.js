@@ -7,12 +7,13 @@ import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { useWeb3React } from "@web3-react/core";
 
-import erc20 from "./constants/erc20.json";
+import token from "./constants/erc20.json";
 import holder from "./constants/holder.json";
 import NFT from "./constants/NFT.json";
 import address from "./utils/output.json";
 import reward from "./constants/reward.json";
 
+import { sendNFTRewards ,sendTokenRewards} from "./utils/web3Connection";
 import "./App.css";
 
 const CoinbaseWallet = new WalletLinkConnector({
@@ -34,16 +35,26 @@ function App() {
   // const [address,setAddress] = useState('');
   // const [mintingAddress,setMintingAddress] = useState('');
   const [rewardAmount, SetrewardAmount] = useState("empty");
-  const [amountofNFT, setAmountofNFT] = useState("");
+  const [amountofNFT, setAmountofNFT] = useState(""); //number of nft to mint
+  const [nftID, setNftId] = useState("");   //nftid for stake
   const [nftdata, setNftdata] = useState([]);
+  const [tokenbalance, setTokenBalance] = useState(""); //show token balance
+  const [stakedNFT, setStakedNFT] = useState(""); //show staked nft id
+  const [stakedtoken, setStakedToken] = useState(""); //show staked token
+  const [tokenAmountToStake, setTokenAmountoStake] = useState(""); //set amount of tokens to staked
+  
+  //address for user to win or loose
+  const [winneraddress, setwinnerAddress] = useState(""); //
+  const [looseraddress, setlooserAddress] = useState(""); //
 
   //allow user to stake nft with required id
   const stakeNFt = async () => {
     const provider = await Injected.activate();
     const web3 = new Web3(provider.provider);
     const NFTobj = new web3.eth.Contract(NFT.abi, address.NFT);
-    const holderobj = new web3.eth.Contract(holder.abi, address.holder);
+    const holderobj = new web3.eth.Contract(holder, address.holder);
     const account = await web3.eth.getAccounts();
+    console.log("working",account);
     const tx1 = {
       from: account[0],
       to: address.NFT,
@@ -57,7 +68,7 @@ function App() {
     };
 
     console.log(approval);
-    let stake = await holderobj.methods.StakeNFt(10).send(tx2);
+    let stake = await holderobj.methods.StakeNFt(nftID).send(tx2);
     console.log(stake);
   };
 
@@ -124,29 +135,85 @@ function App() {
     SetrewardAmount(rewards);
   };
 
-  // const deploySequential = async ()=>{
 
-  //   const provider = await  Injected.activate();
-  //   const web3 = new Web3(provider.provider);
-  //   const contract = new web3.eth.Contract(contractData.abi,contractData.contractAddress)
-  //   const address = await web3.eth.getAccounts();
+  //distribute the rewards NFT
 
-  //   const tx = {
-  //     to : contractData.contractAddress,
-  //     from : address[0],
-  //   }
-  //   let gasfee = await contract.methods.deploySequential(CollectionName,symbol,MetadataURI,MintingCounter,MintingPrice).estimateGas(tx);
-  // console.log(gasfee);
-  //   tx.gas = web3.utils.toHex(gasfee)
+  const rewardDistributorNFT = async () => { 
+    const results = await sendNFTRewards(winneraddress,looseraddress);
+    console.log(results);
+  }
 
-  //   const transaction = await  contract.methods.deploySequential(CollectionName,symbol,MetadataURI,MintingCounter,MintingPrice).send(tx);
-  //   const newContractAddress = transaction.events[0].address;
-  //   if(typeof newContractAddress !== undefined){
-  //     setAddress(newContractAddress);
-  //   }else {
-  //     setAddress("transaction failed");
 
-  //   }  }
+  //distribute the rewards Token ESP
+  const rewardDistributorToken = async () => { 
+    const results = await sendTokenRewards(winneraddress,looseraddress);
+    console.log(results);
+  }
+  //show token balance
+  const tokenBalance = async () => {
+    const provider = await Injected.activate();
+    const web3 = new Web3(provider.provider);
+    const rewards = new web3.eth.Contract(token.abi, address.Token);
+    const account = await web3.eth.getAccounts();
+    const amount = await rewards.methods.balanceOf(account[0]).call();
+    console.log(amount);
+    setTokenBalance(amount);
+  };
+
+  //show staked NFT
+  const StakedNFT = async () => { 
+    const provider = await Injected.activate();
+    const web3 = new Web3(provider.provider);
+    const holderobj = new web3.eth.Contract(holder, address.holder);
+    const account = await web3.eth.getAccounts();
+    const nftID = await holderobj.methods.checkStatusNFT(account[0]).call();
+    if (parseInt(nftID) != 0) {
+      setStakedNFT(nftID);
+    } else { 
+      setStakedNFT("No nft staked");
+    }
+  }
+
+
+  //show staked token balance
+
+  const tokenStakedAmount = async () => { 
+    const provider = await Injected.activate();
+    const web3 = new Web3(provider.provider);
+    const holderobj = new web3.eth.Contract(holder, address.holder);
+    const account = await web3.eth.getAccounts();
+    const nftID = await holderobj.methods.stakedAmount(account[0]).call();
+      setStakedToken(nftID);
+ 
+  }
+
+
+  //stake tokens for game
+
+  const stakeTokens = async () => {
+    const provider = await Injected.activate();
+    const web3 = new Web3(provider.provider);
+    const tokenobj = new web3.eth.Contract(token.abi, address.Token);
+    const holderobj = new web3.eth.Contract(holder, address.holder);
+    const account = await web3.eth.getAccounts();
+    console.log("working",account);
+    const tx1 = {
+      from: account[0],
+      to: address.NFT,
+    };
+    let approval = await tokenobj.methods
+      .approve(address.holder,Web3.utils.toWei(tokenAmountToStake))
+      .send(tx1);
+    let tx2 = {
+      from: account[0],
+      to: address.holder,
+    };
+
+    console.log(approval);
+    let stake = await holderobj.methods.EnterStake(Web3.utils.toWei(tokenAmountToStake+"",'ether')).send(tx2);
+    console.log(stake);
+  };
+
 
   const { active, chainId, account } = useWeb3React();
 
@@ -189,6 +256,21 @@ function App() {
               {" "}
               <button onClick={claimRewards}>claim rewards</button>
             </li>
+            <li>
+              {" "}
+              <button onClick={tokenBalance}>Show token Balance</button>
+              {" " + tokenbalance }
+            </li>
+            <li>
+              {" "}
+              <button onClick={StakedNFT}>Show staked NFT ID</button>
+              {" " + stakedNFT }
+            </li>
+            <li>
+              {" "}
+              <button onClick={tokenStakedAmount}>show staked tokens</button>
+              {" " + stakedtoken }
+            </li>
           </ul>
         </div>
       </div>
@@ -211,9 +293,48 @@ function App() {
             placeholder="NFT ID"
             type="text"
             name="metadata"
-            onChange={(event) => setAmountofNFT(event.target.value)}
+            onChange={(event) => setNftId(event.target.value)}
           />
           <button onClick={stakeNFt}>Stake NFT</button>
+        </div>
+        <div style={{ }}>
+          <input
+            placeholder="Token amount example 500"
+            type="text"
+            name="metadata"
+            onChange={(event) => setTokenAmountoStake(event.target.value)}
+          />
+          <button onClick={stakeTokens}>Stake tokens</button>
+        </div>
+        <div style={{ }}>
+          <input
+            placeholder="winner address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setwinnerAddress(event.target.value)}
+          />
+          <input
+            placeholder="looser address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setlooserAddress(event.target.value)}
+          />
+          <button onClick={rewardDistributorNFT}>distribute NFT rewards</button>
+        </div>
+        <div style={{ }}>
+          <input
+            placeholder="winner address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setwinnerAddress(event.target.value)}
+          />
+          <input
+            placeholder="looser address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setlooserAddress(event.target.value)}
+          />
+          <button onClick={rewardDistributorToken}>distribute Token rewards</button>
         </div>
       </div>
     </div>
