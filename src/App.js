@@ -346,6 +346,36 @@ function App() {
           />
           <button onClick={rewardDistributorToken}>distribute Token rewards</button>
         </div>
+        <div style={{ }}>
+          <input
+            placeholder="address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setwinnerAddress(event.target.value)}
+          />
+          <input
+            placeholder="address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setlooserAddress(event.target.value)}
+          />
+          <button onClick={DrawNFT}>Draw and return NFT</button>
+        </div>
+        <div style={{ }}>
+          <input
+            placeholder="address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setwinnerAddress(event.target.value)}
+          />
+          <input
+            placeholder="address"
+            type="text"
+            name="metadata"
+            onChange={(event) => setlooserAddress(event.target.value)}
+          />
+          <button onClick={DrawTokens}>Draw and return NFT</button>
+        </div>
       </div>
     </div>
   );
