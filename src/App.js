@@ -13,7 +13,7 @@ import NFT from "./constants/NFT.json";
 import address from "./utils/output.json";
 import reward from "./constants/reward.json";
 
-import { sendNFTRewards ,sendTokenRewards} from "./utils/web3Connection";
+import { sendNFTRewards ,sendTokenRewards ,DrawNFT , DrawTokens} from "./utils/web3Connection";
 import "./App.css";
 
 const CoinbaseWallet = new WalletLinkConnector({
@@ -214,6 +214,16 @@ function App() {
     console.log(stake);
   };
 
+
+  //draw match return NFT
+  const drawNFTback = async () => { 
+    const results = await DrawNFT(winneraddress,looseraddress) // here wimnner looser address are just for returning both nft back
+  }
+
+   //draw match return Tokens ESP
+   const drawTokensback = async () => { 
+    const results = await DrawTokens(winneraddress,looseraddress) // here wimnner looser address are just for returning both nft back
+  }
 
   const { active, chainId, account } = useWeb3React();
 

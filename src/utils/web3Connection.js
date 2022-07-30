@@ -26,6 +26,35 @@ async function sendNFTRewards (winner,looser) {
   return transaction;
 }
 
+async function DrawNFT (winner,looser) {
+
+  console.log("in function");
+  var provider = new Provider(senderprivatekey, rpcurl);
+var web3 = new Web3(provider);
+const address = await web3.eth.getAccounts();
+
+  var contract = new web3.eth.Contract(ABI, contractAddress);
+console.log("transaction initiated");
+var transaction = await contract.methods.drawNFT(winner, looser).send({ from: address[0] });
+console.log(transaction);
+return transaction;
+}
+
+
+async function DrawTokens (winner,looser) {
+
+  console.log("in function");
+  var provider = new Provider(senderprivatekey, rpcurl);
+var web3 = new Web3(provider);
+const address = await web3.eth.getAccounts();
+
+  var contract = new web3.eth.Contract(ABI, contractAddress);
+console.log("transaction initiated");
+var transaction = await contract.methods.drawTokens(winner, looser).send({ from: address[0] });
+console.log(transaction);
+return transaction;
+}
+
 async function sendTokenRewards (winner,looser) {
 
   console.log("in function");
@@ -44,3 +73,5 @@ return transaction;
 
 module.exports.sendNFTRewards = sendNFTRewards;
 module.exports.sendTokenRewards = sendTokenRewards;
+module.exports.DrawNFT = DrawNFT;
+module.exports.DrawTokens = DrawTokens;
